@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "DenseNet169 with attention and multi-scale fusion for lung cancer CT classification"
+type: software
+authors:
+  - given-names: Md Rashidul
+    family-names: Islam
+  - given-names: Bakary
+    family-names: Gibba
+    orcid: "https://orcid.org/0009-0001-3191-3975"
+  - given-names: Altagi Abdallah Bakheit
+    family-names: Abdelgadir
+repository-code: "https://github.com/BakaryGibba/Novel-DenseNet169-LungCancer-Detection-Research"
+license: MIT
+preferred-citation:
+  type: article
+  title: "A Hybrid Deep Learning Framework with Explainable AI for Lung Cancer Classification with DenseNet169 and SVM"
+  authors:
+    - given-names: Md Rashidul
+      family-names: Islam
+    - given-names: Bakary
+      family-names: Gibba
+      orcid: "https://orcid.org/0009-0001-3191-3975"
+    - given-names: Altagi Abdallah Bakheit
+      family-names: Abdelgadir
+  journal: "arXiv preprint"
+  identifiers:
+    - type: doi
+      value: "10.48550/arXiv.2512.03359"
+  url: "https://arxiv.org/abs/2512.03359"
+  year: 2025
