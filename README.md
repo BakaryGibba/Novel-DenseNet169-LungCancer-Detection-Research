@@ -1,141 +1,100 @@
-![Skin Cancer Illustration](https://www.nationaldaycalendar.com/.image/ar_16:9%2Cc_fill%2Ccs_srgb%2Cg_faces:center%2Cq_auto:eco%2Cw_768/MjEwMzI5NzQ4MDc5OTEyMTQw/website-feature---lung-cancer-awareness-month--november.png)
+<div align="center">
 
----
+# DenseNet169 with Attention and Multi-Scale Fusion for Lung Cancer CT Classification
 
-# 🧠 DenseNet169-Based Novel Deep Learning Model for Lung Cancer Detection
+**Experimental notebook from the research behind *A Hybrid Deep Learning Framework with Explainable AI for Lung Cancer Classification with DenseNet169 and SVM*.**
 
-### A Custom Architecture Integrating SE Block and Multi-Scale Feature Fusion
+[![arXiv](https://img.shields.io/badge/arXiv-2512.03359-B31B1B)](https://arxiv.org/abs/2512.03359)
+[![Status](https://img.shields.io/badge/status-under%20review-B45309)](#publication)
+[![Framework](https://img.shields.io/badge/TensorFlow-Keras-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![License](https://img.shields.io/badge/license-MIT-0F766E)](LICENSE)
 
----
+</div>
 
-## 📘 Overview
+> [!IMPORTANT]
+> This is research code, not a diagnostic tool. It must not be used for clinical decisions.
 
-This repository contains a **novel deep learning model** built upon the **DenseNet169** architecture, tailored specifically for **lung cancer detection** using medical imaging. The model integrates two critical enhancements: **Squeeze-and-Excitation (SE) blocks** and a **Feature Pyramid Network (FPN)-like fusion module** to improve feature discrimination and robustness across lesion scales.
+## Publication
 
----
+**A Hybrid Deep Learning Framework with Explainable AI for Lung Cancer Classification with DenseNet169 and SVM**
+Md Rashidul Islam, Bakary Gibba, Altagi Abdallah Bakheit Abdelgadir
+Under review at the *IAES International Journal of Artificial Intelligence*. Preprint: [arXiv:2512.03359](https://arxiv.org/abs/2512.03359)
 
-## 🧪 Research Background
+### How this repository relates to the paper
 
-**Title**: *Enhancing Lung Cancer Detection with DenseNet169 and SVM: A Hybrid Deep Learning Framework with Explainable AI*
+The paper's final pipeline is a **DenseNet169 + SVM hybrid** interpreted with **Grad-CAM and SHAP**. This repository contains a related experiment from the same work: an end-to-end DenseNet169 classifier extended with channel attention, multi-scale feature fusion and focal loss. The SVM stage and the XAI analysis are **not** included here; see the preprint for those.
 
-This research aims to enhance the diagnostic process of lung cancer by developing a highly accurate model with an improved DenseNet backbone. The proposed architecture addresses challenges such as:
+## Dataset
 
-* **Class imbalance in medical datasets**
-* **Subtle lesion variations**
-* **Interpretability of deep features**
+[IQ-OTH/NCCD lung cancer dataset](https://www.kaggle.com/datasets/hamdallak/the-iqothnccd-lung-cancer-dataset): chest CT slices in three classes (benign, malignant, normal). The dataset is not redistributed here.
 
----
+![Sample CT slices from each class](figures/sample-ct-slices.png)
 
-## 🏗️ Model Contributions
+## Method
 
-### ✅ 1. **DenseNet169 Backbone**
+| Component | Details |
+| --- | --- |
+| Backbone | DenseNet169 without the top classifier, initialised from ImageNet weights |
+| Attention | Squeeze-and-Excitation block (ratio 16) on the backbone output |
+| Multi-scale fusion | FPN-style fusion of the four dense-block outputs |
+| Loss | Class-weighted focal loss (γ = 2, α = [10, 1, 2]) |
+| Imbalance | SMOTE applied to the training split only |
+| Input | 256 × 256 greyscale slices replicated to three channels |
+| Training | Adam, batch size 32, 20 epochs, `ReduceLROnPlateau` on validation loss |
+| Split | Stratified 80/20 train/test (`random_state=42`) |
 
-Used as the feature extractor without top layers (`include_top=False`) and preloaded with custom-trained weights.
+## Results
 
-```python
-base_model = DenseNet169(include_top=False, input_shape=(224, 224, 3), weights=None)
-base_model.load_weights(densenet169_weights_path)
+Test set: 220 CT slices (stratified 20% split).
+
+| Class | Precision | Recall | F1 | Support |
+| --- | ---: | ---: | ---: | ---: |
+| Benign | 1.00 | 0.79 | 0.88 | 24 |
+| Malignant | 0.99 | 1.00 | 1.00 | 113 |
+| Normal | 0.94 | 0.99 | 0.96 | 83 |
+| **Accuracy** | | | **0.97** | 220 |
+| Macro average | 0.98 | 0.93 | 0.95 | 220 |
+
+<img src="figures/confusion-matrix.png" alt="Confusion matrix: 0 = benign, 1 = malignant, 2 = normal" width="360">
+
+Labels: 0 = benign, 1 = malignant, 2 = normal. Benign is the hardest class: 5 of 24 benign slices were predicted as normal.
+
+### Notes on evaluation
+
+- The test split is also passed to `model.fit` as `validation_data`, so the learning-rate schedule responds to test-set loss. A separate validation split would give a cleaner estimate.
+- The split is at slice level. If one patient contributes several slices, related slices can appear in both training and test sets.
+- Results come from a single split of one public dataset, with no external validation.
+
+## Repository Contents
+
+| File | Purpose |
+| --- | --- |
+| [`densenet169-se-fpn-lung-ct.ipynb`](densenet169-se-fpn-lung-ct.ipynb) | Data loading, SMOTE, model, training and evaluation (Kaggle notebook) |
+| [`figures/`](figures/) | Sample slices and confusion matrix exported from the notebook |
+| [`CITATION.cff`](CITATION.cff) | Citation metadata for the preprint |
+
+## Reproducing
+
+The notebook was run on Kaggle with the IQ-OTH/NCCD dataset and DenseNet169 ImageNet weights attached as Kaggle inputs. To run it elsewhere, update `DATASET_PATH` and `densenet169_weights_path` in the notebook.
+
+## Citation
+
+```bibtex
+@misc{islam2025hybrid,
+  author = {Md Rashidul Islam and Bakary Gibba and Altagi Abdallah Bakheit Abdelgadir},
+  title = {A Hybrid Deep Learning Framework with Explainable AI for Lung Cancer Classification with DenseNet169 and SVM},
+  year = {2025},
+  eprint = {2512.03359},
+  archivePrefix = {arXiv}
+}
 ```
 
 ---
 
-### ✅ 2. **Squeeze-and-Excitation (SE) Block**
+<div align="center">
 
-A channel-wise attention mechanism introduced after the DenseNet feature extractor. It improves the model’s ability to focus on more informative channels by adaptively recalibrating them.
+**Part of [Bakary Gibba's AI engineering portfolio](https://github.com/BakaryGibba/bakary-gibba-ai-engineering-portfolio)**
 
-```python
-def se_block(input_tensor, ratio=16):
-    ...
-    return Multiply()([input_tensor, se])
-```
+[Portfolio website](https://bakary-gibba.vercel.app/) · [LinkedIn](https://www.linkedin.com/in/bakary-gibba-6409bb248/) · [Google Scholar](https://scholar.google.com/citations?user=bp0G4sgAAAAJ&hl=en)
 
-> 📌 **Purpose**: Enhance important features, suppress noise, and guide better classification decisions.
-
----
-
-### ✅ 3. **Feature Pyramid Network (FPN)-like Fusion**
-
-Multi-scale feature maps from intermediate DenseNet layers are fused using a simplified FPN structure. This helps the model learn both low-level and high-level spatial features, which is particularly effective in capturing lesions of varying sizes.
-
-```python
-def fpn_block(pyramid_features):
-    ...
-    return fused_features
-```
-
-> 📌 **Layers Used**:
-
-* `conv2_block6_concat` (Dense Block 1)
-* `conv3_block12_concat` (Dense Block 2)
-* `conv4_block24_concat` (Dense Block 3)
-* `conv5_block16_concat` (Dense Block 4)
-
-These layers are fused hierarchically to form a richer final feature representation.
-
----
-
-### ✅ 4. **Custom Focal Loss for Imbalanced Data**
-
-To counter class imbalance, a class-weighted **focal loss function** is applied during training.
-
-```python
-def focal_loss(gamma=2., alpha=[10, 1, 2]):
-    ...
-```
-
----
-
-## 🛠️ Model Summary
-
-| Component     | Description                                      |
-| ------------- | ------------------------------------------------ |
-| Base          | DenseNet169 (no top)                             |
-| Attention     | Squeeze-and-Excitation Block                     |
-| Fusion        | FPN-like layer fusion from multiple Dense Blocks |
-| Classifier    | Dense layer with softmax                         |
-| Loss Function | Custom class-weighted focal loss                 |
-| Optimizer     | Adam                                             |
-| Input Size    | 224x224 RGB Images                               |
-| Output        | 3-Class Lung Cancer Prediction                   |
-
----
-
-## 📈 Training Setup
-
-* **Epochs**: 20
-* **Batch Size**: 32
-* **Callbacks**: `ReduceLROnPlateau`
-* **Oversampling**: SMOTE applied to training data
-
----
-
-## 🖼️ Sample Architecture Diagram *(Optional)*
-
-> Would you like me to generate a custom architecture diagram visualizing DenseNet169 → SE → FPN → Classifier?
-
----
-
-## 📂 Repository Contents
-
-```
-.
-├── model/
-│   ├── densenet169_se_fpn.py   # Main model file
-│   ├── utils.py                # Focal loss, data handling
-├── weights/
-│   └── densenet169_weights.h5
-├── data/
-│   └── lung_cancer_dataset/
-├── train.py
-├── README.md
-```
-
----
-
-## 🧠 Future Work
-
-* Integrate XAI tools (e.g., Grad-CAM) for interpretability
-* Evaluate performance on external datasets
-* Fine-tune SE and FPN configurations
-
----
+</div>
